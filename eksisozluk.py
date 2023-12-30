@@ -1,31 +1,49 @@
-import random
 import time
 from selenium import webdriver
 
-browser = webdriver.Firefox()
-url = "https://eksisozluk.com/mustafa-kemal-ataturk--34712?p="
-pageCount = 1
-entries = []
-entryCount = 1
+def get_entries(url, start_page, end_page):
+    browser = webdriver.Firefox()  # You can change to different browsers here.
+    entries = []
 
-while pageCount <= 10:
-    randomPage = random.randint(1, 1290)
-    newurl = url + str(randomPage)
-    browser.get(newurl)
-    elements = browser.find_elements_by_css_selector(".content")
-    for element in elements:
-        entries.append(element.text)
-    time.sleep(5)
-    pageCount += 1
+    try:
+        for page_num in range(start_page, end_page + 1):
+            current_page = f"{url}{page_num}"
+            browser.get(current_page)
+            elements = browser.find_elements_by_css_selector(".content")
+            for element in elements:
+                entries.append(element.text)
+            time.sleep(5)
+    except Exception as e:
+        print(f"Error occurred: {e}")
+    finally:
+        browser.quit()
 
-with open("entries.txt", "w", encoding="UTF-8") as file:
-    for entry in entries:
-        file.write(str(pageCount) + ".\n" + entry + "\n")
-        file.write("*******************")
-        pageCount += 1
+    return entries
 
-for entry in entries:
-    print(str(entryCount) + "*****************************")
-    print(entry)
+def save_entries_to_file(entries):
+    with open("entries.txt", "w", encoding="UTF-8") as file:
+        for idx, entry in enumerate(entries, start=1):
+            file.write(f"{idx}.\n{entry}\n")
+            file.write("*******************\n")
 
-browser.close()
+def print_entries(entries):
+    for idx, entry in enumerate(entries, start=1):
+        print(f"{idx}*****************************")
+        print(entry)
+
+def main():
+    url = "https://eksisozluk.com/mustafa-kemal-ataturk--34712?p="
+    try:
+        start_page = int(input("Starting page number: "))
+        end_page = int(input("Ending page number: "))
+        if start_page <= 0 or end_page <= 0 or start_page > end_page:
+            raise ValueError("Invalid page range.")
+    except ValueError as ve:
+        print(f"Error: {ve}")
+    else:
+        entries = get_entries(url, start_page, end_page)
+        save_entries_to_file(entries)
+        print_entries(entries)
+
+if __name__ == "__main__":
+    main()
